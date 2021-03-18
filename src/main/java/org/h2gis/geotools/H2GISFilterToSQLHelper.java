@@ -30,19 +30,7 @@ import java.sql.Timestamp;
 import java.util.List;
 import org.geotools.data.jdbc.FilterToSQL;
 import org.geotools.filter.FilterCapabilities;
-import org.geotools.filter.function.FilterFunction_strConcat;
-import org.geotools.filter.function.FilterFunction_strEndsWith;
-import org.geotools.filter.function.FilterFunction_strEqualsIgnoreCase;
-import org.geotools.filter.function.FilterFunction_strIndexOf;
-import org.geotools.filter.function.FilterFunction_strLength;
-import org.geotools.filter.function.FilterFunction_strReplace;
-import org.geotools.filter.function.FilterFunction_strStartsWith;
-import org.geotools.filter.function.FilterFunction_strSubstring;
-import org.geotools.filter.function.FilterFunction_strSubstringStart;
-import org.geotools.filter.function.FilterFunction_strToLowerCase;
-import org.geotools.filter.function.FilterFunction_strToUpperCase;
-import org.geotools.filter.function.FilterFunction_strTrim;
-import org.geotools.filter.function.FilterFunction_strTrim2;
+import org.geotools.filter.function.*;
 import org.geotools.filter.function.math.FilterFunction_abs;
 import org.geotools.filter.function.math.FilterFunction_abs_2;
 import org.geotools.filter.function.math.FilterFunction_abs_3;
@@ -130,6 +118,8 @@ public class H2GISFilterToSQLHelper {
             caps.addType(FilterFunction_ceil.class);
             caps.addType(FilterFunction_floor.class);
             caps.addType(FilterFunction_exp.class);
+
+            caps.addType(FilterFunction_if_then_else.class);
         }
         return caps;
     }

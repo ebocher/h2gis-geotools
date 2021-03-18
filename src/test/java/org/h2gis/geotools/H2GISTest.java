@@ -264,7 +264,7 @@ class H2GISTest extends H2GISDBTestSetUp {
         assertEquals(1, fc.size());
         SimpleFeature[] features = (SimpleFeature[]) fc.toArray(new SimpleFeature[fc.size()]);
         assertEquals(features[0].getDefaultGeometry(), wKTReader.read("POINT(5 5)"));
-        st.execute("drop table LANDCOVER");
+        st.execute("drop table LANDCOVER");       
     }
 
     @Test
@@ -433,48 +433,9 @@ class H2GISTest extends H2GISDBTestSetUp {
         assertTrue(geomType.getBinding().isAssignableFrom(Polygon.class));
         geomType = (GeometryType) schema.getDescriptor("PGZM").getType();
         assertTrue(geomType.getBinding().isAssignableFrom(Polygon.class));
-    }
+    }   
     
     
-      @Test
-      void testIterateFeatures() throws IOException, SQLException, CQLException {
-        String inputFile ="/home/ebocher/Autres/data/IGN/BD_parcellaire_ign_lrgf93/PARCELLE.SHP";
-        inputFile = "/home/ebocher/Autres/data/IGN/data_cadastre/parc_dgi/Parc_dgi.shp";
-        //inputFile = "/home/ebocher/Autres/data/DONNEES RENNES/Reseau_Rennes.shp";
-        //st.execute("drop table if exists PARCELS");
-        //st.execute("CALL FILE_TABLE('" + inputFile + "', 'PARCELS');");
-        //st.execute("DROP TABLE IF EXISTS output_table_test");
-        
-         st.execute("drop table if exists PARCELS");
-        st.execute("CREATE TABLE PARCELS ( FID INTEGER, NAME CHARACTER VARYING(64)"
-                + " );"
-                + "INSERT INTO PARCELS VALUES(1, 'Green Forest');"
-                + "INSERT INTO PARCELS VALUES(2, 'Cereal');"
-                + "INSERT INTO PARCELS VALUES(3, 'Building');");
-
-        long start = System.currentTimeMillis();
-         
-        SimpleFeatureSource fs =  ds.getFeatureSource("PARCELS");
-        SimpleFeatureCollection features =  fs.getFeatures();
-        SimpleFeatureIterator iterator = features.features();
-        try {
-            while (iterator.hasNext()) {
-                SimpleFeature feature = iterator.next();
-                System.out.println(feature.getAttribute("FID"));
-            }
-        } finally {
-            iterator.close(); // IMPORTANT
-        }
-
-        /*ds.createSchema(transformed.getSchema());
-        FeatureStore<SimpleFeatureType,SimpleFeature> featStore =
-                (FeatureStore<SimpleFeatureType,SimpleFeature>)ds.getFeatureSource("OUTPUT_TABLE_TEST_F");
-
-        featStore.addFeatures(simpleFeatureCollection);*/
-
-        long end = System.currentTimeMillis();
-        System.out.println("Times " + (end - start) / 1000);
-    }
      
      /**
      * Generate a path for the database
