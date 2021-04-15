@@ -20,19 +20,20 @@
  */
 package org.h2gis.geotools;
 
-import java.io.File;
+import org.geotools.data.*;
+import org.geotools.data.simple.SimpleFeatureStore;
+import org.geotools.feature.DefaultFeatureCollection;
+import org.geotools.feature.simple.SimpleFeatureBuilder;
+import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.h2gis.utilities.GeometryTableUtilities;
 import org.junit.jupiter.api.*;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.io.ParseException;
 import java.io.IOException;
-import java.net.URI;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import org.geotools.data.DataUtilities;
-import org.geotools.data.FeatureSource;
-import org.geotools.data.Query;
+
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
@@ -69,13 +70,13 @@ class H2GISTest extends H2GISDBTestSetUp {
 
     private static Statement st;
 
-    @BeforeEach
+    @BeforeAll
     void setUpStatement() throws Exception {
         setDatabase();
         st = ds.getDataSource().getConnection().createStatement();
     }
 
-    @AfterEach
+    @AfterAll
     void tearDownStatement() throws Exception {
         st.close();
         tearDownDatabase();
@@ -461,12 +462,48 @@ class H2GISTest extends H2GISDBTestSetUp {
         SimpleFeatureType schema = DataUtilities.createType(tableName, "geom:Point:srid=4326,id:Integer,name:String");
         ds.createSchema(schema);
         assertNotNull(ds.getSchema(schema.getName()));
-        assertNotNull(ds.getFeatureSource(tableName));        
+        assertNotNull(ds.getFeatureSource(tableName));
         tableName = "MYGEOTABLE";
         st.execute("DROP TABLE if exists \"" + tableName + "\"");
         schema = DataUtilities.createType(tableName, "geom:Point:srid=4326,id:Integer,name:String");
         ds.createSchema(schema);
         assertNotNull(ds.getSchema(schema.getName()));
         assertNotNull(ds.getFeatureSource(tableName));
+    }
+
+    @Test
+    void writeTable() throws SQLException, IOException, SchemaException {
+        String tableName = "mygeotable";
+        st.execute("DROP TABLE if exists \"" + tableName + "\"");
+        SimpleFeatureType schema = DataUtilities.createType(tableName, "geom:Point:srid=4326,name:String,id:Integer,year:Integer,");
+        ds.createSchema(schema);
+        assertNotNull(ds.getSchema(schema.getName()));
+        assertNotNull(ds.getFeatureSource(tableName));
+
+        DefaultFeatureCollection collection = new DefaultFeatureCollection();
+        SimpleFeatureType type = ds.getSchema(schema.getName());
+
+        // 37.5667, 122.681944, Seoul, 473, 2015
+        GeometryFactory gf = JTSFactoryFinder.getGeometryFactory();
+        Point seoul = gf.createPoint(new Coordinate(37.5667,129.681944));
+        SimpleFeature f = SimpleFeatureBuilder.build(type, new Object[] { seoul, "Seoul", 473, 2015 }, "mygeotable.1");
+        collection.add(f);       
+
+        try (Transaction t = new DefaultTransaction()) {
+            SimpleFeatureSource featureSourceOut =  ds.getFeatureSource(tableName);
+            SimpleFeatureStore featureStore =  (SimpleFeatureStore) featureSourceOut;
+                try {
+                    featureStore.addFeatures(collection);
+                    t.commit();
+                } catch (IOException eek) {
+                    eek.printStackTrace();
+                    try {
+                        t.rollback();
+                    } catch (IOException doubleEeek) {
+                        // rollback failed?
+                    }
+                }
+        }        
+        assertEquals(1, ds.getFeatureSource(tableName).getCount(Query.ALL));
     }
 }

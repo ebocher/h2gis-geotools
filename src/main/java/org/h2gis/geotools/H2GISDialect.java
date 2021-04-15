@@ -49,7 +49,6 @@ import org.geotools.jdbc.JDBCDataStore;
 import org.geotools.referencing.CRS;
 import org.geotools.util.Version;
 import org.h2.value.ValueGeometry;
-import static org.h2gis.utilities.GeometryTableUtilities.getGeometryColumnsView;
 import org.h2gis.utilities.TableLocation;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.AttributeDescriptor;
