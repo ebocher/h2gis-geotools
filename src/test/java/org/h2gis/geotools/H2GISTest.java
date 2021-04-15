@@ -24,6 +24,7 @@ import org.geotools.data.*;
 import org.geotools.data.simple.SimpleFeatureStore;
 import org.geotools.feature.DefaultFeatureCollection;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
+import org.geotools.filter.text.ecql.ECQL;
 import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.h2gis.utilities.GeometryTableUtilities;
 import org.junit.jupiter.api.*;
@@ -33,6 +34,7 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import org.geotools.data.shapefile.ShapefileDataStore;
 
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
@@ -71,13 +73,13 @@ class H2GISTest extends H2GISDBTestSetUp {
     private static Statement st;
 
     @BeforeAll
-    void setUpStatement() throws Exception {
+    static void setUpStatement() throws Exception {
         setDatabase();
         st = ds.getDataSource().getConnection().createStatement();
     }
 
     @AfterAll
-    void tearDownStatement() throws Exception {
+    static void tearDownStatement() throws Exception {
         st.close();
         tearDownDatabase();
     }
@@ -505,5 +507,37 @@ class H2GISTest extends H2GISDBTestSetUp {
                 }
         }        
         assertEquals(1, ds.getFeatureSource(tableName).getCount(Query.ALL));
+    }
+    
+    
+    @Test
+    void readShapeFileWriteToTable() throws SQLException, IOException, CQLException {
+        ShapefileDataStore shpDataStore = new ShapefileDataStore(this.getClass().getResource("hedgerow.shp"));
+        SimpleFeatureSource inputFs = shpDataStore.getFeatureSource("hedgerow");
+        assertNotNull(inputFs);
+        assertEquals(994, inputFs.getCount(Query.ALL));
+        SimpleFeatureType inputSchema = inputFs.getSchema();
+        st.execute("drop table if exists \"hedgerow\"");
+        ds.createSchema(inputSchema);
+        assertNotNull(ds.getSchema(inputSchema.getName()));
+        SimpleFeatureSource outputFs = ds.getFeatureSource("hedgerow");
+        assertNotNull(outputFs);
+        try (Transaction t = new DefaultTransaction()) {
+            SimpleFeatureCollection collection = inputFs.getFeatures(ECQL.toFilter("gid=2"));
+            SimpleFeatureStore featureStore =  (SimpleFeatureStore) outputFs;
+            try {
+                featureStore.addFeatures(collection);
+                t.commit();
+            } catch (IOException eek) {
+                eek.printStackTrace();
+                try {
+                    t.rollback();
+                } catch (IOException doubleEeek) {
+                    // rollback failed?
+                }
+            }
+        }
+        assertEquals(1, ds.getFeatureSource("hedgerow").getCount(Query.ALL));
+        st.execute("drop table if exists \"hedgerow\"");
     }
 }

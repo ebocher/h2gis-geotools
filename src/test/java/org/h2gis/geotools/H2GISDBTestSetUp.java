@@ -36,13 +36,13 @@ public abstract class H2GISDBTestSetUp {
     
     private static final String DB_NAME = "H2GISDBTest";
     
-    public H2GISDataStoreFactory factory;
-    private HashMap params;
-    public JDBCDataStore ds;
-    public WKTReader wKTReader;
+    public static H2GISDataStoreFactory factory;
+    private static HashMap params;
+    public static JDBCDataStore ds;
+    public static WKTReader wKTReader;
     
 
-    public void setDatabase() throws Exception {
+    public static void setDatabase() throws Exception {
         factory = new H2GISDataStoreFactory();
         factory.setBaseDirectory(new File(getDataBasePath(DB_NAME)));
         params = new HashMap();
@@ -60,7 +60,7 @@ public abstract class H2GISDBTestSetUp {
      * @param dbName
      * @return 
      */
-    private String getDataBasePath(String dbName) {
+    private static String getDataBasePath(String dbName) {
         if (dbName.startsWith("file://")) {
             return new File(URI.create(dbName)).getAbsolutePath();
         } else {
@@ -68,7 +68,7 @@ public abstract class H2GISDBTestSetUp {
         }
     }
 
-    public void tearDownDatabase() throws Exception {
+    public static void tearDownDatabase() throws Exception {
         ds.getDataSource().getConnection().close();
     }
     

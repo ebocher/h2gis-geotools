@@ -763,5 +763,5 @@ public class H2GISDialect extends BasicSQLDialect {
             }
         }
         return srid;
-    }
+    }    
 }
